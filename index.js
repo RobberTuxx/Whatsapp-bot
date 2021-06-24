@@ -1,78 +1,78 @@
 require('dotenv').config()
 const fs = require('fs');
-const { Client } = require('whatsapp-web.js');
+const {Client} = require('whatsapp-web.js');
 const schedule = require('node-schedule');
-var qrcode = require('qrcode-terminal');
+const codigoQr = require('qrcode-terminal');
 
-const recipient = '5219512328188' //numero que va a recibir mensaje;
-const scheduleTime = "30 51 21 * * *" //formato de shcedule https://www.npmjs.com/package/node-schedule;
-let isReady = false;
+const receptor = process.env.TELEFONO //numero que va a recibir mensaje;
+const formatoCron = process.env.CRON //formato de schedule https://www.npmjs.com/package/node-schedule;
+let botListo = false;
 
-const SESSION_FILE_PATH = './session.json';
-let sessionCfg;
-if (fs.existsSync(SESSION_FILE_PATH)) {
-    sessionCfg = require(SESSION_FILE_PATH);
+const SESION = './session.json';
+let sesionCfg;
+
+if (fs.existsSync(SESION)) {
+    sesionCfg = require(SESION);
 }
 
-const client = new Client({ puppeteer: {headless:true  }, session: sessionCfg });
+const cliente = new Client({puppeteer: {headless: true}, session: sesionCfg});
 
-client.initialize();
+cliente.initialize();
 
-client.on('qr', (qr) => {
-    qrcode.generate(qr)
+cliente.on('qr', (qr) => {
+    codigoQr.generate(qr)
 });
 
-client.on('authenticated', (session) => {
-    console.log('AUTHENTICATED', session);
-    sessionCfg=session;
-    fs.writeFile(SESSION_FILE_PATH, JSON.stringify(session), function (err) {
-        if (err) {
-            console.error(err);
+cliente.on('authenticated', (sesion) => {
+    sesionCfg = sesion;
+    fs.writeFile(SESION, JSON.stringify(sesion), function (error) {
+        if (error) {
+            console.error(error);
         }
     });
 });
 
-client.on('auth_failure', msg => {
-    console.error('AUTHENTICATION FAILURE', msg);
+cliente.on('auth_failure', msg => {
+    console.error('Autenticacion fallida :(', msg);
 });
 
-// TODO: Add more messages
-const goodDays = [
-    'Buenos días, que tengas un día bonito:) ❤️',
+const listaMensajes = [
+    'Buenos días, que tengas un bonito día :) ❤️',
+    'Buenos días 🤠️',
+    'Buenos días 🔥️',
+    'Hola buen dia 😃️',
 ];
 
-function getRandomArbitrary(min, max) {
-    return Math.random() * (max - min) + min;
+function getRandomArbitrary(minimo, maximo) {
+    return Math.random() * (maximo - minimo) + minimo;
 }
 
-client.on('ready', () => {
-    console.log('Listo, esperando Scheduler');
-    isReady = true;
-   // client.getContacts().then(users => console.log('contactos: ', users))
-
+cliente.on('ready', () => {
+    console.log('Conexion lista!');
+    botListo = true;
+    // client.getContacts().then(contactos => console.log('contactos: ', contactos))
 });
 
 /*
-                                ┌───────────── segundo (0 - 59)
-                                │ ┌───────────── minuto (0 - 59)
-                                │ │ ┌───────────── hora (0 - 23)
-                                │ │ │ ┌───────────── dia (1 - 31)
-                                │ │ │ │ ┌───────────── mes (1 - 12)
-                                │ │ │ │ │ ┌────────────── dia de la semana (0-7)
-                                │ │ │ │ │ |
-                                │ │ │ │ │ |                  */
-//var j = schedule.scheduleJob('* * * * * *', () => {
-var j = schedule.scheduleJob(scheduleTime, () => {
-
-    if(!isReady){
-        console.error("User not ready");
+                                     ┌───────────── segundo (0 - 59)
+                                     │ ┌───────────── minuto (0 - 59)
+                                     │ │ ┌───────────── hora (0 - 23)
+                                     │ │ │ ┌───────────── dia (1 - 31)
+                                     │ │ │ │ ┌───────────── mes (1 - 12)
+                                     │ │ │ │ │ ┌────────────── dia de la semana (0-7)
+                                     │ │ │ │ │ |
+                                     │ │ │ │ │ |                  */
+//const cron = schedule.scheduleJob('* * * * * *', () => {
+const cron = schedule.scheduleJob(formatoCron, () => {
+    if (!botListo) {
+        console.error("El usuario no esta listo");
         process.exit(1);
     }
 
-    let y = Math.round(getRandomArbitrary(0, goodDays.length));
-    client.sendMessage(`${recipient}@c.us`,goodDays[y]).then((response)=>{
-        if(response.id.fromMe){
-            console.log("done");
+    const random = Math.round(getRandomArbitrary(0, listaMensajes.length));
+    cliente.sendMessage(`${receptor}@c.us`, listaMensajes[random]).then((response) => {
+        if (response.id.fromMe) {
+            console.log("Mensaje enviado :D");
         }
     });
 });

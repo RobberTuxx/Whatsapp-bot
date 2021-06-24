@@ -1,11 +1,13 @@
-# Ultra Basic Whatsapp Boy
+# Whatsapp Bot
 
-This project uses [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js) thus it needs Node.
+Este proyecto usa [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js)
 
-## Setting up the bot
+## Iniciar el bot
 
-Install dependecies and start the script using
+Instala las dependencias usando el siguiente script
 
 ```bash
 yarn && node index.js
 ```
+
+Cambia las variables de entorno ( **.env** )
